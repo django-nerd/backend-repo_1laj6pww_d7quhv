@@ -1,48 +1,69 @@
 """
-Database Schemas
+Database Schemas for The Chess Club — The Observatory
 
-Define your MongoDB collection schemas here using Pydantic models.
-These schemas are used for data validation in your application.
-
-Each Pydantic model represents a collection in your database.
-Model name is converted to lowercase for the collection name:
-- User -> "user" collection
-- Product -> "product" collection
-- BlogPost -> "blogs" collection
+Each Pydantic model corresponds to a MongoDB collection (lowercased class name).
+Example: class Product -> collection name "product".
 """
+from pydantic import BaseModel, Field, HttpUrl
+from typing import Optional, List
+from datetime import datetime
 
-from pydantic import BaseModel, Field
-from typing import Optional
+# Community submissions (The Club)
+class Submission(BaseModel):
+    author_name: str = Field(..., description="Display name of the contributor")
+    author_handle: Optional[str] = Field(None, description="Social or Chess.com handle")
+    title: Optional[str] = Field(None, description="Optional title for the piece")
+    content: Optional[str] = Field(None, description="Short text or caption")
+    image_url: Optional[HttpUrl] = Field(None, description="Hosted image URL")
+    tags: List[str] = Field(default_factory=list, description="Keywords or themes")
 
-# Example schemas (replace with your own):
+# Featured members (The Club)
+class Member(BaseModel):
+    name: str
+    role: Optional[str] = None
+    avatar_url: Optional[HttpUrl] = None
+    bio: Optional[str] = None
 
-class User(BaseModel):
-    """
-    Users collection schema
-    Collection name: "user" (lowercase of class name)
-    """
-    name: str = Field(..., description="Full name")
-    email: str = Field(..., description="Email address")
-    address: str = Field(..., description="Address")
-    age: Optional[int] = Field(None, ge=0, le=120, description="Age in years")
-    is_active: bool = Field(True, description="Whether user is active")
+# Weekly thought (The Club)
+class Thought(BaseModel):
+    quote: str
+    author: Optional[str] = None
+    week_of: Optional[datetime] = None
 
+# Archive entries (The Archive)
+class ArchiveEntry(BaseModel):
+    title: str
+    subtitle: Optional[str] = None
+    body: Optional[str] = None
+    image_urls: List[HttpUrl] = Field(default_factory=list)
+    timeline_label: Optional[str] = Field(None, description="e.g., S/S 24, Prototype v2")
+
+# Events
+class Event(BaseModel):
+    title: str
+    date: datetime
+    location: str
+    description: Optional[str] = None
+    image_url: Optional[HttpUrl] = None
+    rsvp_open: bool = True
+
+class RSVP(BaseModel):
+    event_id: str
+    name: str
+    email: str
+
+# Shop
 class Product(BaseModel):
-    """
-    Products collection schema
-    Collection name: "product" (lowercase of class name)
-    """
-    title: str = Field(..., description="Product title")
-    description: Optional[str] = Field(None, description="Product description")
-    price: float = Field(..., ge=0, description="Price in dollars")
-    category: str = Field(..., description="Product category")
-    in_stock: bool = Field(True, description="Whether product is in stock")
+    name: str
+    slug: str = Field(..., description="URL-friendly identifier")
+    price: float = Field(..., ge=0)
+    currency: str = Field("USD")
+    short: Optional[str] = Field(None, description="One-line story")
+    description: Optional[str] = None
+    images: List[HttpUrl] = Field(default_factory=list)
+    in_stock: bool = True
 
-# Add your own schemas here:
-# --------------------------------------------------
-
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
+# Newsletter
+class NewsletterSignup(BaseModel):
+    email: str
+    source: Optional[str] = Field(None, description="e.g., hero-modal, footer")
